@@ -1,0 +1,1 @@
+sql_details = {'host':'localhost', 'user':'root', 'password':'alakazam', 'database':'mercado'}
