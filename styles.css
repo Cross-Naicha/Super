@@ -6,6 +6,9 @@
   --accent:#67e8f9;
   --accent-2:#a78bfa;
   --border:#2a2a31;
+
+  /* altura del header */
+  --header-h:64px;
 }
 
 *{box-sizing:border-box}
@@ -13,7 +16,20 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);font-family:sy
 .container{max-width:1100px;margin:0 auto;padding:16px}
 
 /* Header */
-.app-header{position:sticky;top:0;background:linear-gradient(180deg,var(--bg),rgba(15,15,18,.9));backdrop-filter:blur(6px);z-index:10;border-bottom:1px solid var(--border);display:flex;gap:16px;align-items:center;justify-content:space-between;padding:12px 16px}
+.app-header{
+  position:sticky;
+  top:0;
+  height:var(--header-h);
+  background:linear-gradient(180deg,var(--bg),rgba(15,15,18,.9));
+  backdrop-filter:blur(6px);
+  z-index:10;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  gap:16px;
+  align-items:center;
+  justify-content:space-between;
+  padding:12px 16px;
+}
 .brand{display:flex;align-items:center;gap:12px}
 .logo{display:inline-grid;place-items:center;width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent-2));font-weight:700;color:#0b0b0d}
 .titles h1{font-size:18px;margin:0}
@@ -27,11 +43,18 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);font-family:sy
 .tab[aria-selected="true"]{background:linear-gradient(135deg,rgba(103,232,249,.15),rgba(167,139,250,.15));border-color:transparent}
 .tab .count{color:var(--muted);font-variant-numeric:tabular-nums;margin-left:6px}
 
-/* Table (desktop) */
+/* Table */
 .table-wrap{background:var(--panel);border:1px solid var(--border);border-radius:14px;overflow:auto}
 .data-table{width:100%;border-collapse:separate;border-spacing:0;min-width:800px}
 .data-table th,.data-table td{padding:12px 14px;border-bottom:1px solid var(--border)}
-.data-table thead th{position:sticky;top:60px;background:var(--panel);z-index:5;font-weight:600;color:#d9d9df}
+.data-table thead th{
+  position:sticky;
+  top:var(--header-h); /* siempre igual al header */
+  background:var(--panel);
+  z-index:5;
+  font-weight:600;
+  color:#d9d9df;
+}
 .data-table tbody tr:hover{background:rgba(255,255,255,.03)}
 .right{text-align:right}
 .sortable{cursor:pointer}
