@@ -74,12 +74,23 @@ function renderRows(rows){
       <td data-label="Marca">${r.brand || '-'}</td>
       <td data-label="Clase">${r.category}</td>
       <td data-label="Precio presentación" class="right price">${fmtCurrency.format(r.p_price)}</td>
-      <td data-label="Precio por unidad estándar" class="right price">${fmtCurrency.format(r.f_price)}<span class="unit-note"> ${inferStandardUnit(r.presentation).standard}</span></td>
+      <td data-label="Precio por unidad estándar" class="right price">
+        ${fmtCurrency.format(r.f_price)}<span class="unit-note"> ${inferStandardUnit(r.presentation).standard}</span>
+      </td>
       <td data-label="Fecha">${fmtDate(r.date)}</td>
     `;
+
+    // 👉 nuevo: click en la fila → abre producto.html con key
+    tr.style.cursor = 'pointer';
+    tr.addEventListener('click', () => {
+      const params = new URLSearchParams({ key: r.key });
+      window.location.href = `producto.html?${params.toString()}`;
+    });
+
     tbody.appendChild(tr);
   });
 }
+
 
 // Sorting
 let currentSort = {key:'date', dir:'desc'};

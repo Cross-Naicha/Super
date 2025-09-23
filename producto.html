@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Súper & Stock — Producto</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    main { padding:16px; max-width:600px; margin:0 auto; }
+    .back { display:inline-block; margin-bottom:16px; color:var(--accent); text-decoration:none; font-size:14px; }
+    .card {
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:16px;
+      margin-bottom:16px;
+    }
+    .card h2 { margin:0 0 8px; font-size:18px; }
+    .muted { color:var(--muted); font-size:14px; }
+    .price { font-size:18px; font-weight:600; }
+    .calc label { display:block; margin:12px 0 4px; font-size:14px; }
+    .calc input {
+      width:100%; padding:10px 12px; font-size:16px;
+      border:1px solid var(--border); border-radius:8px;
+      background:var(--bg); color:var(--fg);
+    }
+    .result {
+      margin-top:16px; padding:12px; border-radius:8px;
+      font-size:16px; font-weight:600; text-align:center;
+    }
+    .better { background:rgba(34,197,94,0.15); color:var(--good); }
+    .worse { background:rgba(239,68,68,0.15); color:var(--bad); }
+    .equal { background:rgba(167,139,250,0.15); color:var(--accent-2); }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <span class="logo">S&S</span>
+      <div class="titles">
+        <h1>Producto</h1>
+        <p class="subtitle">Comparador de oferta rápida</p>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <a href="index.html" class="back">← Volver al índice</a>
+
+    <section id="product-info" class="card">
+      <h2 id="p-name">Producto</h2>
+      <p class="muted" id="p-presentation"></p>
+      <p class="muted" id="p-brand"></p>
+      <p>Precio registrado: <span id="p-price" class="price"></span></p>
+      <p>Precio estandarizado: <span id="p-fprice" class="price"></span></p>
+    </section>
+
+    <section class="card calc">
+      <h2>Calculadora de oferta</h2>
+      <label for="new-price">Nuevo precio</label>
+      <input id="new-price" type="number" inputmode="decimal" step="0.01" placeholder="Ej: 1999.90">
+
+      <label for="new-presentation">Nueva presentación</label>
+      <input id="new-presentation" type="text" placeholder="Ej: 600g, 1L, 4u">
+
+      <div id="calc-result" class="result equal">
+        Ingrese datos para calcular
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <small>Súper & Stock</small>
+  </footer>
+
+  <script>
+    // === utilidades ===
+    const fmtCurrency = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 2 });
+
+    function inferStandardUnit(presentation) {
+      if (!presentation) return {standard:'/u', factor:1};
+      const s = presentation.toLowerCase().replace(/\s+/g,'');
+      const match = s.match(/^(\d+(?:[.,]\d+)?)([a-z]+)$/i);
+      if (!match) return {standard:'/u', factor:1};
+      const qty = parseFloat(match[1].replace(',', '.'));
+      const unit = match[2];
+      if (unit === 'g')   return {standard:'/kg', factor: qty/1000};
+      if (unit === 'kg')  return {standard:'/kg', factor: qty};
+      if (unit === 'ml')  return {standard:'/L',  factor: qty/1000};
+      if (unit === 'cc')  return {standard:'/L',  factor: qty/1000};
+      if (unit === 'l')   return {standard:'/L',  factor: qty};
+      if (unit === 'u')   return {standard:'/u',  factor: qty};
+      return {standard:'/u', factor:1};
+    }
+
+    // === obtener producto desde JSON ===
+    async function boot() {
+      const params = new URLSearchParams(window.location.search);
+      const key = params.get('key');
+      if (!key) return;
+
+      const res = await fetch('data/prices.json');
+      const raw = await res.json();
+      const data = raw[key];
+      if (!data) return;
+
+      // parseo
+      const [left, brandRaw] = key.split(' - ').map(x=>x?.trim() ?? '');
+      const brand = brandRaw ?? '';
+      const m = left.match(/(.+)\s+(\d+(?:[.,]\d+)?[a-zA-Z]+)$/);
+      let product = left, presentation = '';
+      if (m){ product = m[1].trim(); presentation = m[2].trim(); }
+
+      // info base
+      document.getElementById('p-name').textContent = product;
+      document.getElementById('p-presentation').textContent = presentation;
+      document.getElementById('p-brand').textContent = brand;
+      document.getElementById('p-price').textContent = fmtCurrency.format(data.p_price);
+      document.getElementById('p-fprice').textContent = fmtCurrency.format(data.f_price) + " " + inferStandardUnit(presentation).standard;
+
+      // calculadora
+      const newPriceEl = document.getElementById('new-price');
+      const newPresEl = document.getElementById('new-presentation');
+      const resultEl = document.getElementById('calc-result');
+
+      function recalc(){
+        const np = parseFloat(newPriceEl.value);
+        const pres = newPresEl.value || presentation;
+        if (!np || !pres) {
+          resultEl.textContent = "Ingrese datos para calcular";
+          resultEl.className = "result equal";
+          return;
+        }
+        const info = inferStandardUnit(pres);
+        const newF = np / info.factor;
+        const oldF = data.f_price;
+        let cls = "equal", msg="";
+        if (newF < oldF) { cls="better"; msg="✅ Más barato"; }
+        else if (newF > oldF) { cls="worse"; msg="❌ Más caro"; }
+        else { msg="≈ Igual"; }
+        resultEl.className = "result " + cls;
+        resultEl.textContent = fmtCurrency.format(newF) + " " + info.standard + " — " + msg;
+      }
+
+      newPriceEl.addEventListener('input', recalc);
+      newPresEl.addEventListener('input', recalc);
+    }
+
+    boot();
+  </script>
+</body>
+</html>
