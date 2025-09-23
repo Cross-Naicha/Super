@@ -1,13 +1,15 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Súper & Stock — Producto</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css" />
   <style>
+    /* Estilos específicos de la vista producto (mobile-first) */
     main { padding:16px; max-width:600px; margin:0 auto; }
     .back { display:inline-block; margin-bottom:16px; color:var(--accent); text-decoration:none; font-size:14px; }
+
     .card {
       background:var(--panel);
       border:1px solid var(--border);
@@ -18,19 +20,38 @@
     .card h2 { margin:0 0 8px; font-size:18px; }
     .muted { color:var(--muted); font-size:14px; }
     .price { font-size:18px; font-weight:600; }
-    .calc label { display:block; margin:12px 0 4px; font-size:14px; }
-    .calc input {
+    .mono { font-variant-numeric: tabular-nums; }
+
+    .calc label { display:block; margin:12px 0 6px; font-size:14px; }
+    .calc .row { display:flex; gap:10px; align-items:center; }
+    .calc input[type="number"], .calc input[type="text"] {
       width:100%; padding:10px 12px; font-size:16px;
       border:1px solid var(--border); border-radius:8px;
       background:var(--bg); color:var(--fg);
     }
-    .result {
-      margin-top:16px; padding:12px; border-radius:8px;
-      font-size:16px; font-weight:600; text-align:center;
+
+    .chips { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+    .chip {
+      padding:8px 12px; border-radius:999px; border:1px solid var(--border);
+      background:var(--panel); color:var(--fg); font-size:14px; cursor:pointer; user-select:none;
     }
-    .better { background:rgba(34,197,94,0.15); color:var(--good); }
-    .worse { background:rgba(239,68,68,0.15); color:var(--bad); }
-    .equal { background:rgba(167,139,250,0.15); color:var(--accent-2); }
+    .chip[aria-pressed="true"] {
+      background:linear-gradient(135deg, rgba(103,232,249,.15), rgba(167,139,250,.15));
+      border-color:transparent;
+    }
+
+    .result {
+      position:sticky; bottom:12px;
+      margin-top:16px; padding:12px; border-radius:10px;
+      font-size:16px; font-weight:700; text-align:center;
+      background:rgba(167,139,250,0.15); color:var(--accent-2);
+    }
+    .result.good { background:rgba(34,197,94,0.15); color:#22c55e; }
+    .result.bad  { background:rgba(239,68,68,0.15); color:#ef4444; }
+
+    @media (min-width: 768px) {
+      .calc .row { max-width: 420px; }
+    }
   </style>
 </head>
 <body>
@@ -51,21 +72,26 @@
       <h2 id="p-name">Producto</h2>
       <p class="muted" id="p-presentation"></p>
       <p class="muted" id="p-brand"></p>
-      <p>Precio registrado: <span id="p-price" class="price"></span></p>
-      <p>Precio estandarizado: <span id="p-fprice" class="price"></span></p>
+      <p>Precio registrado: <span id="p-price" class="price mono"></span></p>
+      <p>Precio estandarizado: <span id="p-fprice" class="price mono"></span></p>
     </section>
 
-    <section class="card calc">
-      <h2>Calculadora de oferta</h2>
+    <section class="card calc" aria-labelledby="calc-title">
+      <h2 id="calc-title">Calculadora de oferta</h2>
+
       <label for="new-price">Nuevo precio</label>
-      <input id="new-price" type="number" inputmode="decimal" step="0.01" placeholder="Ej: 1999.90">
+      <input id="new-price" type="number" inputmode="decimal" step="0.01" placeholder="Ej: 1999.90" class="mono" />
 
-      <label for="new-presentation">Nueva presentación</label>
-      <input id="new-presentation" type="text" placeholder="Ej: 600g, 1L, 4u">
-
-      <div id="calc-result" class="result equal">
-        Ingrese datos para calcular
+      <label for="amount">Nueva presentación</label>
+      <div class="row">
+        <input id="amount" type="number" inputmode="decimal" step="0.001" placeholder="Cantidad (ej: 900 o 0.9)" class="mono" />
       </div>
+
+      <div class="chips" id="unit-chips" role="group" aria-label="Unidad">
+        <!-- Se llena dinámicamente: g / kg  ||  mL / L  ||  u -->
+      </div>
+
+      <div id="calc-result" class="result">Ingrese precio y presentación</div>
     </section>
   </main>
 
@@ -74,16 +100,20 @@
   </footer>
 
   <script>
-    // === utilidades ===
+    // === utilidades compartidas ===
     const fmtCurrency = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 2 });
-
+    function parseDecimal(v) {
+      if (typeof v !== 'string') v = String(v ?? '');
+      // aceptar coma o punto
+      return parseFloat(v.replace(',', '.'));
+    }
     function inferStandardUnit(presentation) {
       if (!presentation) return {standard:'/u', factor:1};
       const s = presentation.toLowerCase().replace(/\s+/g,'');
-      const match = s.match(/^(\d+(?:[.,]\d+)?)([a-z]+)$/i);
-      if (!match) return {standard:'/u', factor:1};
-      const qty = parseFloat(match[1].replace(',', '.'));
-      const unit = match[2];
+      const m = s.match(/^(\d+(?:[.,]\d+)?)([a-z]+)$/i);
+      if (!m) return {standard:'/u', factor:1};
+      const qty = parseDecimal(m[1]);
+      const unit = m[2];
       if (unit === 'g')   return {standard:'/kg', factor: qty/1000};
       if (unit === 'kg')  return {standard:'/kg', factor: qty};
       if (unit === 'ml')  return {standard:'/L',  factor: qty/1000};
@@ -93,9 +123,43 @@
       return {standard:'/u', factor:1};
     }
 
-    // === obtener producto desde JSON ===
+    // Convierte cantidad + unidad suelta → factor a unidad estándar objetivo (/kg o /L o /u)
+    function factorFrom(amount, unit, targetStandard) {
+      const qty = parseDecimal(amount);
+      if (!qty || qty <= 0) return null;
+
+      // Peso
+      if (targetStandard === '/kg') {
+        if (unit === 'kg') return qty;
+        if (unit === 'g')  return qty / 1000;
+        // otras unidades no aplican, retornar null
+        return null;
+      }
+      // Volumen
+      if (targetStandard === '/L') {
+        if (unit === 'L' || unit === 'l')  return qty;
+        if (unit === 'mL' || unit === 'ml' || unit === 'cc') return qty / 1000;
+        return null;
+      }
+      // Unidades
+      if (targetStandard === '/u') {
+        if (unit === 'u' || unit === 'U') return qty;
+        return null;
+      }
+      return null;
+    }
+
+    function makeChip(label, pressed=false) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'chip';
+      b.textContent = label;
+      b.setAttribute('aria-pressed', pressed ? 'true' : 'false');
+      return b;
+    }
+
     async function boot() {
-      const params = new URLSearchParams(window.location.search);
+      const params = new URLSearchParams(location.search);
       const key = params.get('key');
       if (!key) return;
 
@@ -104,46 +168,105 @@
       const data = raw[key];
       if (!data) return;
 
-      // parseo
-      const [left, brandRaw] = key.split(' - ').map(x=>x?.trim() ?? '');
+      // Parse de la clave: "nombre 600g - marca"
+      const [left, brandRaw] = key.split(' - ').map(s => s?.trim() ?? '');
       const brand = brandRaw ?? '';
       const m = left.match(/(.+)\s+(\d+(?:[.,]\d+)?[a-zA-Z]+)$/);
       let product = left, presentation = '';
       if (m){ product = m[1].trim(); presentation = m[2].trim(); }
 
-      // info base
+      // Mostrar info base
+      const baseInfo = inferStandardUnit(presentation);
       document.getElementById('p-name').textContent = product;
-      document.getElementById('p-presentation').textContent = presentation;
-      document.getElementById('p-brand').textContent = brand;
+      document.getElementById('p-presentation').textContent = presentation || '—';
+      document.getElementById('p-brand').textContent = brand || '—';
       document.getElementById('p-price').textContent = fmtCurrency.format(data.p_price);
-      document.getElementById('p-fprice').textContent = fmtCurrency.format(data.f_price) + " " + inferStandardUnit(presentation).standard;
+      document.getElementById('p-fprice').textContent = fmtCurrency.format(data.f_price) + ' ' + baseInfo.standard;
 
-      // calculadora
-      const newPriceEl = document.getElementById('new-price');
-      const newPresEl = document.getElementById('new-presentation');
+      // Componentes de la calculadora
+      const priceEl = document.getElementById('new-price');
+      const amountEl = document.getElementById('amount');
+      const chipsEl = document.getElementById('unit-chips');
       const resultEl = document.getElementById('calc-result');
 
-      function recalc(){
-        const np = parseFloat(newPriceEl.value);
-        const pres = newPresEl.value || presentation;
-        if (!np || !pres) {
-          resultEl.textContent = "Ingrese datos para calcular";
-          resultEl.className = "result equal";
+      // Generar chips de unidad según estándar base
+      let unitOptions = [];
+      if (baseInfo.standard === '/kg') unitOptions = ['g','kg'];
+      else if (baseInfo.standard === '/L') unitOptions = ['mL','L'];
+      else unitOptions = ['u'];
+
+      // Preselección: la unidad "chica" por defecto (g o mL), o u
+      const defaultUnit = unitOptions.length > 1 ? unitOptions[0] : unitOptions[0];
+
+      let currentUnit = defaultUnit;
+      unitOptions.forEach(u => {
+        const btn = makeChip(u, u === defaultUnit);
+        btn.addEventListener('click', () => {
+          // toggle pressed
+          chipsEl.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed','false'));
+          btn.setAttribute('aria-pressed','true');
+          currentUnit = u;
+          recalc();
+        });
+        chipsEl.appendChild(btn);
+      });
+
+      // Autofoco al precio para agilizar uso en el súper
+      priceEl.focus();
+
+      // Recalcular
+      function recalc() {
+        const np = parseDecimal(priceEl.value);
+        const amt = parseDecimal(amountEl.value);
+        if (!np || !amt || !currentUnit) {
+          resultEl.className = 'result';
+          resultEl.textContent = 'Ingrese precio y presentación';
           return;
         }
-        const info = inferStandardUnit(pres);
-        const newF = np / info.factor;
-        const oldF = data.f_price;
-        let cls = "equal", msg="";
-        if (newF < oldF) { cls="better"; msg="✅ Más barato"; }
-        else if (newF > oldF) { cls="worse"; msg="❌ Más caro"; }
-        else { msg="≈ Igual"; }
-        resultEl.className = "result " + cls;
-        resultEl.textContent = fmtCurrency.format(newF) + " " + info.standard + " — " + msg;
+        const f = factorFrom(amt, currentUnit, baseInfo.standard);
+        if (!f || f <= 0) {
+          resultEl.className = 'result';
+          resultEl.textContent = 'Presentación inválida para este producto';
+          return;
+        }
+        const newStandardPrice = np / f; // $ por unidad estándar
+        const old = data.f_price;
+        let cls = 'result', msg = '≈ Igual';
+        if (newStandardPrice < old) { cls = 'result good'; msg = '✅ Más barato'; }
+        else if (newStandardPrice > old) { cls = 'result bad'; msg = '❌ Más caro'; }
+        const diffPct = old ? ((newStandardPrice - old) / old) * 100 : 0;
+        const pctTxt = (diffPct === 0 || !isFinite(diffPct)) ? '' : ` — ${diffPct>0?'+':''}${diffPct.toFixed(1)}%`;
+
+        resultEl.className = cls;
+        resultEl.textContent = `${fmtCurrency.format(newStandardPrice)} ${baseInfo.standard} — ${msg}${pctTxt}`;
       }
 
-      newPriceEl.addEventListener('input', recalc);
-      newPresEl.addEventListener('input', recalc);
+      // Eventos
+      priceEl.addEventListener('input', recalc);
+      amountEl.addEventListener('input', recalc);
+
+      // Si el producto base tenía presentación, precargamos cantidad y unidad orientativa
+      // (ej: 600g → cantidad=600, unidad=g)
+      if (presentation) {
+        const pres = presentation.toLowerCase().replace(/\s+/g,'');
+        const m2 = pres.match(/^(\d+(?:[.,]\d+)?)([a-z]+)$/i);
+        if (m2) {
+          const baseQty = parseDecimal(m2[1]);
+          const baseUnit = m2[2];
+          // mapear a nuestros chips si corresponde
+          let candidateUnit = currentUnit;
+          if (baseInfo.standard === '/kg') {
+            if (baseUnit === 'g' || baseUnit === 'kg') candidateUnit = baseUnit === 'g' ? 'g' : 'kg';
+          } else if (baseInfo.standard === '/L') {
+            if (baseUnit === 'ml' || baseUnit === 'cc' || baseUnit === 'l') candidateUnit = (baseUnit === 'l') ? 'L' : 'mL';
+          } else if (baseInfo.standard === '/u') {
+            candidateUnit = 'u';
+          }
+          amountEl.value = baseQty;
+          currentUnit = candidateUnit;
+          chipsEl.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', c.textContent === candidateUnit ? 'true' : 'false'));
+        }
+      }
     }
 
     boot();
