@@ -7,7 +7,6 @@ function inferStandardUnit(presentation) {
   if (!presentation) return {standard:'/u', factor:1, raw:null};
   const s = presentation.toLowerCase().replace(/\s+/g,'');
 
-  // Examples: "600g", "1kg", "170g", "1l", "900cc", "500ml", "4u"
   const match = s.match(/^(\d+(?:[.,]\d+)?)([a-z]+)$/i);
   if (!match) return {standard:'/u', factor:1, raw:null};
 
@@ -21,7 +20,6 @@ function inferStandardUnit(presentation) {
   if (unit === 'l')   return {standard:'/L',  factor: qty, raw: {qty, unit}};
   if (unit === 'u')   return {standard:'/u',  factor: qty, raw: {qty, unit}};
 
-  // default to unit
   return {standard:'/u', factor:1, raw: {qty, unit}};
 }
 
@@ -29,7 +27,6 @@ function inferStandardUnit(presentation) {
 function parseKey(key){
   const [left, brandRaw] = key.split(' - ').map(x => x?.trim() ?? '');
   const brand = brandRaw ?? '';
-  // Extract presentation (last token containing digits+unit), rest is product name
   const m = left.match(/(.+)\s+(\d+(?:[.,]\d+)?[a-zA-Z]+)$/);
   let product = left, presentation = '';
   if (m){
@@ -64,34 +61,22 @@ function buildTabs(items){
   });
 }
 
-// Render table rows
+// Render table rows (con data-label para mobile)
 function renderRows(rows){
   const tbody = document.getElementById('tbody');
   tbody.innerHTML = '';
 
   rows.forEach(r=>{
     const tr = document.createElement('tr');
-
-    const unitInfo = inferStandardUnit(r.presentation);
-    const unitLabel = unitInfo.standard; // '/kg', '/L', '/u'
-
     tr.innerHTML = `
-      <td>${r.product}</td>
-      <td>${r.presentation || '-'}</td>
-      <td>${r.brand || '-'}</td>
-      <td>${r.category}</td>
-      <td class="right price">${fmtCurrency.format(r.p_price)}</td>
-      <td class="right price">${fmtCurrency.format(r.f_price)}<span class="unit-note"> ${unitLabel}</span></td>
-      <td>${fmtDate(r.date)}</td>
+      <td data-label="Producto">${r.product}</td>
+      <td data-label="Presentación">${r.presentation || '-'}</td>
+      <td data-label="Marca">${r.brand || '-'}</td>
+      <td data-label="Clase">${r.category}</td>
+      <td data-label="Precio presentación" class="right price">${fmtCurrency.format(r.p_price)}</td>
+      <td data-label="Precio por unidad estándar" class="right price">${fmtCurrency.format(r.f_price)}<span class="unit-note"> ${inferStandardUnit(r.presentation).standard}</span></td>
+      <td data-label="Fecha">${fmtDate(r.date)}</td>
     `;
-
-    // Click → go to product page with key param
-    tr.style.cursor = 'pointer';
-    tr.addEventListener('click', () => {
-      const params = new URLSearchParams({ key: r.key });
-      window.location.href = `producto.html?${params.toString()}`;
-    });
-
     tbody.appendChild(tr);
   });
 }
@@ -108,7 +93,6 @@ function applySort(rows){
       return mult * (a[key] - b[key]);
     }
     if (key === 'date') {
-      // DD/MM/YYYY compare by YYYYMMDD
       const toNum = d => d.split('/').reverse().join('');
       return mult * (toNum(a.date).localeCompare(toNum(b.date)));
     }
@@ -137,47 +121,12 @@ function filterRows(all){
     return okCat && haystack.includes(q);
   });
 }
-  
-// 🔧 Parche para que cada <td> lleve data-label y se muestre bien en mobile
-  function enhanceTableForMobile() {
-    const table = document.getElementById("products-table");
-    const headers = [...table.querySelectorAll("thead th")].map(th => th.textContent.trim());
-    table.querySelectorAll("tbody tr").forEach(tr => {
-      [...tr.children].forEach((td, i) => {
-        td.setAttribute("data-label", headers[i] || "");
-      });
-    });
-  }
-  // Re-ejecutar cada vez que se renderizan filas
-  document.addEventListener("rowsUpdated", enhanceTableForMobile);
-
-function renderRows(rows){
-  const tbody = document.getElementById('tbody');
-  tbody.innerHTML = '';
-
-  rows.forEach(r=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${r.product}</td>
-      <td>${r.presentation || '-'}</td>
-      <td>${r.brand || '-'}</td>
-      <td>${r.category}</td>
-      <td class="right price">${fmtCurrency.format(r.p_price)}</td>
-      <td class="right price">${fmtCurrency.format(r.f_price)}<span class="unit-note"> ${inferStandardUnit(r.presentation).standard}</span></td>
-      <td>${fmtDate(r.date)}</td>
-    `;
-    tbody.appendChild(tr);
-  });
-
-  // 🔧 Avisar que se actualizaron las filas
-  document.dispatchEvent(new Event("rowsUpdated"));
 
 // Load JSON and boot
 async function boot(){
-  const res = await fetch('prices.json');
+  const res = await fetch('data/prices.json');
   const raw = await res.json();
 
-  // Transform to array
   const rows = Object.entries(raw).map(([key, v]) => {
     const {product, presentation, brand} = parseKey(key);
     return {
@@ -192,10 +141,8 @@ async function boot(){
     };
   });
 
-  // Build tabs
   buildTabs(rows);
 
-  // Interactivity
   const tableEl = document.getElementById('products-table');
   tableEl.querySelectorAll('th.sortable').forEach(th=>{
     th.addEventListener('click', ()=>{
@@ -236,4 +183,3 @@ async function boot(){
 }
 
 boot();
-}
