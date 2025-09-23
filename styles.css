@@ -8,7 +8,7 @@
   --border:#2a2a31;
 
   /* altura del header */
-  --header-h:64px;
+  --header-h:40px;
 }
 
 *{box-sizing:border-box}
