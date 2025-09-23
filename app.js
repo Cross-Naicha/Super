@@ -137,6 +137,40 @@ function filterRows(all){
     return okCat && haystack.includes(q);
   });
 }
+  
+// 🔧 Parche para que cada <td> lleve data-label y se muestre bien en mobile
+  function enhanceTableForMobile() {
+    const table = document.getElementById("products-table");
+    const headers = [...table.querySelectorAll("thead th")].map(th => th.textContent.trim());
+    table.querySelectorAll("tbody tr").forEach(tr => {
+      [...tr.children].forEach((td, i) => {
+        td.setAttribute("data-label", headers[i] || "");
+      });
+    });
+  }
+  // Re-ejecutar cada vez que se renderizan filas
+  document.addEventListener("rowsUpdated", enhanceTableForMobile);
+
+function renderRows(rows){
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+
+  rows.forEach(r=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${r.product}</td>
+      <td>${r.presentation || '-'}</td>
+      <td>${r.brand || '-'}</td>
+      <td>${r.category}</td>
+      <td class="right price">${fmtCurrency.format(r.p_price)}</td>
+      <td class="right price">${fmtCurrency.format(r.f_price)}<span class="unit-note"> ${inferStandardUnit(r.presentation).standard}</span></td>
+      <td>${fmtDate(r.date)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // 🔧 Avisar que se actualizaron las filas
+  document.dispatchEvent(new Event("rowsUpdated"));
 
 // Load JSON and boot
 async function boot(){
@@ -202,3 +236,4 @@ async function boot(){
 }
 
 boot();
+}
