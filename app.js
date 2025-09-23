@@ -140,7 +140,7 @@ function filterRows(all){
 
 // Load JSON and boot
 async function boot(){
-  const res = await fetch('data/prices.json');
+  const res = await fetch('prices.json');
   const raw = await res.json();
 
   // Transform to array
