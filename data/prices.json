@@ -1,0 +1,74 @@
+{
+    "pan lacteado 600g - la veneziana": {
+        "category": "pan",
+        "p_price": 2899.99,
+        "f_price": 4833.32,
+        "date": "20/09/2025"
+    },
+    "queso danbo 1kg - paladini": {
+        "category": "quesos",
+        "p_price": 3810.95,
+        "f_price": 14300.0,
+        "date": "20/09/2025"
+    },
+    "queso triangular 100g - adler": {
+        "category": "quesos",
+        "p_price": 2099.99,
+        "f_price": 20999.9,
+        "date": "20/09/2025"
+    },
+    "jamon cocido 1kg - paladini": {
+        "category": "fiambres",
+        "p_price": 3841.8,
+        "f_price": 11400.0,
+        "date": "20/09/2025"
+    },
+    "queso cheddar 144g - adler": {
+        "category": "quesos",
+        "p_price": 3049.99,
+        "f_price": 21180.49,
+        "date": "20/09/2025"
+    },
+    "postre 4u - danette": {
+        "category": "postres",
+        "p_price": 5554.49,
+        "f_price": 1388.62,
+        "date": "20/09/2025"
+    },
+    "maxirollo 1u - felpita": {
+        "category": "higienico",
+        "p_price": 1699.99,
+        "f_price": 1699.99,
+        "date": "20/09/2025"
+    },
+    "frutos secos 1kg - power fruits": {
+        "category": "frutas y verduras",
+        "p_price": 13000.0,
+        "f_price": 13000.0,
+        "date": "20/09/2025"
+    },
+    "aceite de oliva 500cc - la toscana": {
+        "category": "aceites",
+        "p_price": 12999.99,
+        "f_price": 25999.98,
+        "date": "20/09/2025"
+    },
+    "atun 170g - la campagnola": {
+        "category": "conservas",
+        "p_price": 4949.69,
+        "f_price": 29115.82,
+        "date": "20/09/2025"
+    },
+    "galletas saladas 507g - bagley": {
+        "category": "galletas",
+        "p_price": 3216.79,
+        "f_price": 6344.75,
+        "date": "20/09/2025"
+    },
+    "caballa 380g - puglisi": {
+        "category": "conservas",
+        "p_price": 5199.98,
+        "f_price": 13684.16,
+        "date": "20/09/2025"
+    }
+}

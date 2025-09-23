@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Súper & Stock — Índice</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <span class="logo">S&S</span>
+      <div class="titles">
+        <h1>Index de productos</h1>
+        <p class="subtitle">Precio de presentación y precio por unidad estándar</p>
+      </div>
+    </div>
+    <div class="actions">
+      <input id="search" type="search" placeholder="Buscar por producto o marca…">
+    </div>
+  </header>
+
+  <main class="container">
+    <nav id="tabs" class="tabs" aria-label="Filtrar por clase"></nav>
+
+    <div class="table-wrap">
+      <table id="products-table" class="data-table" aria-describedby="table-caption">
+        <caption id="table-caption" class="sr-only">Listado de productos</caption>
+        <thead>
+          <tr>
+            <th data-key="product" class="sortable">Producto</th>
+            <th data-key="presentation" class="sortable">Presentación</th>
+            <th data-key="brand" class="sortable">Marca</th>
+            <th data-key="category" class="sortable">Clase</th>
+            <th data-key="p_price" class="sortable right">Precio presentación</th>
+            <th data-key="f_price" class="sortable right">Precio por unidad estándar</th>
+            <th data-key="date" class="sortable">Fecha</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <footer class="app-footer">
+    <small>Hecho para comparar rápido — Súper & Stock</small>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
