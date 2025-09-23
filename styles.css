@@ -62,7 +62,7 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);font-family:sy
 }
 .data-table thead th{
   position:sticky;
-  top:var(--header-h); /* no tapa la primera fila */
+  top: 0;
   background:var(--panel);
   z-index:5;
   font-weight:600;
