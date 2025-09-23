@@ -1,5 +1,5 @@
 import mysql.connector
-from sql_connection import sql_details
+from utilities.sql_connection import sql_details
 
 def insert_product(code, category, brand, base_unit, presentation_factor):
     

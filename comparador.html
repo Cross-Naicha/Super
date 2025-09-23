@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Súper & Stock — Comparador libre</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* Estilos específicos de esta vista */
+    main { padding:16px; max-width:700px; margin:0 auto; }
+    .back { display:inline-block; margin-bottom:16px; color:var(--accent); text-decoration:none; font-size:14px; }
+
+    .card {
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:16px;
+      margin-bottom:16px;
+    }
+    .card h2 { margin:0 0 8px; font-size:18px; }
+    .muted { color:var(--muted); font-size:14px; }
+    .mono { font-variant-numeric: tabular-nums; }
+
+    .row { display:flex; gap:10px; align-items:center; }
+    .row > * { flex:1; }
+
+    label { display:block; margin:10px 0 6px; font-size:14px; }
+    input[type="number"]{
+      width:100%; padding:10px 12px; font-size:16px;
+      border:1px solid var(--border); border-radius:8px;
+      background:var(--bg); color:var(--fg);
+    }
+
+    .chips { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+    .chip {
+      padding:8px 12px; border-radius:999px; border:1px solid var(--border);
+      background:var(--panel); color:var(--fg); font-size:14px; cursor:pointer; user-select:none;
+    }
+    .chip[aria-pressed="true"]{
+      background:linear-gradient(135deg, rgba(103,232,249,.15), rgba(167,139,250,.15));
+      border-color:transparent;
+    }
+
+    .result {
+      position:sticky; bottom:12px;
+      margin-top:16px; padding:12px; border-radius:10px;
+      font-size:16px; font-weight:700; text-align:center;
+      background:rgba(167,139,250,0.15); color:var(--accent-2);
+    }
+    .result.good { background:rgba(34,197,94,0.15); color:#22c55e; }
+    .result.bad  { background:rgba(239,68,68,0.15); color:#ef4444; }
+
+    .grid {
+      display:grid; gap:12px;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 768px) {
+      .grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <span class="logo">S&S</span>
+      <div class="titles">
+        <h1>Comparador libre</h1>
+        <p class="subtitle">Compará dos precios sin estar en el registro</p>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <a href="index.html" class="back">← Volver al índice</a>
+
+    <!-- Tipo de comparación -->
+    <section class="card" aria-labelledby="tipo-title">
+      <h2 id="tipo-title">Tipo de comparación</h2>
+      <p class="muted">Elegí la unidad estándar a la que querés comparar ambos precios.</p>
+      <div id="type-chips" class="chips" role="tablist" aria-label="Tipo">
+        <!-- Chips: Peso (/kg), Volumen (/L), Unidad (/u) -->
+      </div>
+    </section>
+
+    <!-- Entradas A y B -->
+    <section class="grid">
+      <div class="card" aria-labelledby="a-title">
+        <h2 id="a-title">Opción A</h2>
+        <label for="priceA">Precio</label>
+        <input id="priceA" class="mono" type="number" inputmode="decimal" step="0.01" placeholder="Ej: 1999.90" />
+
+        <label for="amountA">Presentación</label>
+        <div class="row">
+          <input id="amountA" class="mono" type="number" inputmode="decimal" step="0.001" placeholder="Cantidad (ej: 900 o 0.9)" />
+        </div>
+        <div id="unitA" class="chips" role="group" aria-label="Unidad A"></div>
+        <p class="muted" id="stdA">—</p>
+      </div>
+
+      <div class="card" aria-labelledby="b-title">
+        <h2 id="b-title">Opción B</h2>
+        <label for="priceB">Precio</label>
+        <input id="priceB" class="mono" type="number" inputmode="decimal" step="0.01" placeholder="Ej: 1899.00" />
+
+        <label for="amountB">Presentación</label>
+        <div class="row">
+          <input id="amountB" class="mono" type="number" inputmode="decimal" step="0.001" placeholder="Cantidad (ej: 1 o 500)" />
+        </div>
+        <div id="unitB" class="chips" role="group" aria-label="Unidad B"></div>
+        <p class="muted" id="stdB">—</p>
+      </div>
+    </section>
+
+    <!-- Resultado -->
+    <section id="panelResult" class="result">Ingresá ambos precios y presentaciones</section>
+  </main>
+
+  <footer class="app-footer">
+    <small>Súper & Stock</small>
+  </footer>
+
+  <script>
+    // ===== Utilidades =====
+    const fmtCurrency = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 2 });
+    const parseDecimal = (v) => {
+      if (typeof v !== 'string') v = String(v ?? '');
+      const n = parseFloat(v.replace(',', '.'));
+      return isFinite(n) ? n : NaN;
+    };
+
+    // Construye chips
+    function makeChip(label, pressed=false){
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'chip';
+      b.textContent = label;
+      b.setAttribute('aria-pressed', pressed ? 'true' : 'false');
+      return b;
+    }
+
+    // Calcula factor a estándar elegido
+    function factorFrom(qty, unit, standard){
+      const x = parseDecimal(qty);
+      if (!x || x <= 0) return null;
+
+      if (standard === '/kg'){
+        if (unit === 'kg') return x;
+        if (unit === 'g')  return x / 1000;
+        return null;
+      }
+      if (standard === '/L'){
+        if (unit === 'L' || unit === 'l')  return x;
+        if (unit === 'mL' || unit === 'ml' || unit === 'cc') return x / 1000;
+        return null;
+      }
+      if (standard === '/u'){
+        if (unit === 'u' || unit === 'U') return x;
+        return null;
+      }
+      return null;
+    }
+
+    // ===== Estado =====
+    let currentStandard = '/kg'; // default
+    let unitA = 'g';
+    let unitB = 'g';
+
+    function renderTypeChips(){
+      const wrap = document.getElementById('type-chips');
+      wrap.innerHTML = '';
+      [
+        {label:'Peso', val:'/kg'},
+        {label:'Volumen', val:'/L'},
+        {label:'Unidad', val:'/u'},
+      ].forEach(opt=>{
+        const btn = makeChip(`${opt.label} (${opt.val})`, opt.val === currentStandard);
+        btn.addEventListener('click', ()=>{
+          currentStandard = opt.val;
+          renderUnitChips(); // rehacer chips A y B según estándar
+          recalcAll();
+          // marcar seleccionado
+          wrap.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed','false'));
+          btn.setAttribute('aria-pressed','true');
+        });
+        wrap.appendChild(btn);
+      });
+    }
+
+    function renderUnitChips(){
+      const a = document.getElementById('unitA');
+      const b = document.getElementById('unitB');
+      a.innerHTML = ''; b.innerHTML = '';
+
+      let opts;
+      if (currentStandard === '/kg')      opts = ['g','kg'];
+      else if (currentStandard === '/L')  opts = ['mL','L'];
+      else                                opts = ['u'];
+
+      // Mantener elección si sigue siendo válida, si no, setear por defecto la primera
+      if (!opts.includes(unitA)) unitA = opts[0];
+      if (!opts.includes(unitB)) unitB = opts[0];
+
+      opts.forEach(u=>{
+        const btnA = makeChip(u, u === unitA);
+        btnA.addEventListener('click', ()=>{
+          unitA = u;
+          a.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed','false'));
+          btnA.setAttribute('aria-pressed','true');
+          recalcAll();
+        });
+        a.appendChild(btnA);
+
+        const btnB = makeChip(u, u === unitB);
+        btnB.addEventListener('click', ()=>{
+          unitB = u;
+          b.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed','false'));
+          btnB.setAttribute('aria-pressed','true');
+          recalcAll();
+        });
+        b.appendChild(btnB);
+      });
+    }
+
+    function recalcAll(){
+      const priceA = parseDecimal(document.getElementById('priceA').value);
+      const amountA = parseDecimal(document.getElementById('amountA').value);
+      const priceB = parseDecimal(document.getElementById('priceB').value);
+      const amountB = parseDecimal(document.getElementById('amountB').value);
+
+      const stdAEl = document.getElementById('stdA');
+      const stdBEl = document.getElementById('stdB');
+      const out = document.getElementById('panelResult');
+
+      // Validaciones mínimas
+      if (!priceA || !amountA || !priceB || !amountB){
+        stdAEl.textContent = '—';
+        stdBEl.textContent = '—';
+        out.className = 'result';
+        out.textContent = 'Ingresá ambos precios y presentaciones';
+        return;
+      }
+
+      const fA = factorFrom(amountA, unitA, currentStandard);
+      const fB = factorFrom(amountB, unitB, currentStandard);
+      if (!fA || !fB){
+        stdAEl.textContent = '—';
+        stdBEl.textContent = '—';
+        out.className = 'result';
+        out.textContent = 'Presentación inválida para el estándar elegido';
+        return;
+      }
+
+      const stdPriceA = priceA / fA;
+      const stdPriceB = priceB / fB;
+
+      stdAEl.textContent = `= ${fmtCurrency.format(stdPriceA)} ${currentStandard}`;
+      stdBEl.textContent = `= ${fmtCurrency.format(stdPriceB)} ${currentStandard}`;
+
+      // Comparación
+      let cls = 'result', msg = '≈ Iguales';
+      let cheaper = null, diffPct = 0;
+
+      if (stdPriceA < stdPriceB) { cheaper = 'A'; diffPct = ((stdPriceB - stdPriceA)/stdPriceB)*100; cls='result good'; msg='✅ Conviene A'; }
+      else if (stdPriceB < stdPriceA) { cheaper = 'B'; diffPct = ((stdPriceA - stdPriceB)/stdPriceA)*100; cls='result good'; msg='✅ Conviene B'; }
+
+      if (cheaper){
+        out.className = cls;
+        out.textContent = `${msg} — ${diffPct.toFixed(1)}% más barato`;
+      } else {
+        // iguales
+        out.className = 'result';
+        out.textContent = '≈ Iguales';
+      }
+    }
+
+    // Eventos
+    ['priceA','amountA','priceB','amountB'].forEach(id=>{
+      document.addEventListener('input', (ev)=>{
+        if (ev.target && ev.target.id === id) recalcAll();
+      }, true);
+    });
+
+    // Inicio
+    renderTypeChips();
+    renderUnitChips();
+    // Autofoco al primer precio (uso en el súper)
+    document.getElementById('priceA').focus();
+  </script>
+</body>
+</html>
