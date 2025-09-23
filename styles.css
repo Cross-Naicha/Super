@@ -7,8 +7,7 @@
   --accent-2:#a78bfa;
   --border:#2a2a31;
 
-  /* altura del header */
-  --header-h:40px;
+  --header-h:64px; /* altura header principal */
 }
 
 *{box-sizing:border-box}
@@ -44,12 +43,26 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);font-family:sy
 .tab .count{color:var(--muted);font-variant-numeric:tabular-nums;margin-left:6px}
 
 /* Table */
-.table-wrap{background:var(--panel);border:1px solid var(--border);border-radius:14px;overflow:auto}
-.data-table{width:100%;border-collapse:separate;border-spacing:0;min-width:800px}
-.data-table th,.data-table td{padding:12px 14px;border-bottom:1px solid var(--border)}
+.table-wrap{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:14px;
+  overflow-x:auto; /* clave para mobile */
+  -webkit-overflow-scrolling: touch; /* scroll suave en iOS */
+}
+.data-table{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0;
+  min-width:800px; /* para forzar scroll en pantallas chicas */
+}
+.data-table th,.data-table td{
+  padding:12px 14px;
+  border-bottom:1px solid var(--border);
+}
 .data-table thead th{
   position:sticky;
-  top:var(--header-h); /* siempre igual al header */
+  top:var(--header-h); /* no tapa la primera fila */
   background:var(--panel);
   z-index:5;
   font-weight:600;
@@ -66,36 +79,11 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);font-family:sy
 .app-footer{border-top:1px solid var(--border);padding:16px;color:var(--muted);text-align:center}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(1px,1px,1px,1px)}
 
-/* --- Responsive --- */
+/* Responsive tweaks */
 @media (max-width: 768px) {
-  .data-table, .data-table thead, .data-table tbody,
-  .data-table th, .data-table td, .data-table tr {
-    display:block;
-    width:100%;
+  .actions input[type="search"] {
+    min-width: 140px;
+    width: 100%;
   }
-  .data-table thead {display:none;}
-  .data-table tr {
-    margin-bottom:12px;
-    border:1px solid var(--border);
-    border-radius:10px;
-    background:var(--panel);
-    padding:10px;
-  }
-  .data-table td {
-    border:none;
-    padding:6px 0;
-    text-align:left;
-  }
-  .data-table td::before {
-    content: attr(data-label);
-    font-weight:600;
-    color:var(--muted);
-    display:block;
-    margin-bottom:2px;
-  }
-  .table-wrap {
-    border:none;
-    background:transparent;
-    overflow:visible;
-  }
+  .container { padding: 8px; }
 }
