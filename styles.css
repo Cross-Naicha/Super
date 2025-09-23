@@ -7,7 +7,7 @@
   --accent-2:#a78bfa;
   --border:#2a2a31;
 
-  --header-h:64px; /* altura header principal */
+  --header-h:64px; /* altura header página */
 }
 
 *{box-sizing:border-box}
@@ -42,19 +42,18 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);font-family:sy
 .tab[aria-selected="true"]{background:linear-gradient(135deg,rgba(103,232,249,.15),rgba(167,139,250,.15));border-color:transparent}
 .tab .count{color:var(--muted);font-variant-numeric:tabular-nums;margin-left:6px}
 
-/* Table */
+/* Table (desktop) */
 .table-wrap{
   background:var(--panel);
   border:1px solid var(--border);
   border-radius:14px;
-  overflow-x:auto; /* clave para mobile */
-  -webkit-overflow-scrolling: touch; /* scroll suave en iOS */
+  overflow:auto;
 }
 .data-table{
   width:100%;
   border-collapse:separate;
   border-spacing:0;
-  min-width:800px; /* para forzar scroll en pantallas chicas */
+  min-width:800px;
 }
 .data-table th,.data-table td{
   padding:12px 14px;
@@ -62,7 +61,7 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);font-family:sy
 }
 .data-table thead th{
   position:sticky;
-  top: 0;
+  top:0; /* corregido: no tapa la primera fila */
   background:var(--panel);
   z-index:5;
   font-weight:600;
@@ -79,8 +78,61 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);font-family:sy
 .app-footer{border-top:1px solid var(--border);padding:16px;color:var(--muted);text-align:center}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(1px,1px,1px,1px)}
 
-/* Responsive tweaks */
+/* --- Mobile: tarjetas compactas --- */
 @media (max-width: 768px) {
+  .data-table,
+  .data-table thead,
+  .data-table tbody,
+  .data-table th,
+  .data-table td,
+  .data-table tr {
+    display:block;
+    width:100%;
+  }
+
+  .data-table thead { display:none; }
+
+  .data-table tr {
+    margin-bottom: 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--panel);
+    padding: 8px 10px;
+  }
+
+  .data-table td {
+    border: none;
+    padding: 4px 0;
+    text-align: left;
+    font-size: 14px;
+    line-height: 1.3;
+  }
+
+  .data-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--muted);
+    display: inline-block;
+    min-width: 120px;
+  }
+
+  /* Producto: destacado */
+  .data-table td[data-label="Producto"] {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--fg);
+    margin-bottom: 4px;
+  }
+
+  /* Precios: destacados con acento */
+  .data-table td[data-label="Precio presentación"],
+  .data-table td[data-label="Precio por unidad estándar"] {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  /* Ajustes de container y buscador */
   .actions input[type="search"] {
     min-width: 140px;
     width: 100%;
