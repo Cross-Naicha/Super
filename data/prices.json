@@ -36,7 +36,7 @@
         "date": "20/09/2025"
     },
     "maxirollo 1u - felpita": {
-        "category": "higienico",
+        "category": "higiene",
         "p_price": 1699.99,
         "f_price": 1699.99,
         "date": "20/09/2025"
@@ -57,18 +57,60 @@
         "category": "conservas",
         "p_price": 4949.69,
         "f_price": 29115.82,
-        "date": "20/09/2025"
+        "date": "26/09/2025"
     },
-    "galletas saladas 507g - bagley": {
+    "gall 507g - bagley": {
         "category": "galletas",
         "p_price": 3216.79,
         "f_price": 6344.75,
-        "date": "20/09/2025"
+        "date": "26/09/2025"
     },
     "caballa 380g - puglisi": {
         "category": "conservas",
-        "p_price": 5199.98,
-        "f_price": 13684.16,
-        "date": "20/09/2025"
+        "p_price": 2599.99,
+        "f_price": 6842.08,
+        "date": "26/09/2025"
+    },
+    "queso parmesano 1kg - la serenisima": {
+        "category": "quesos",
+        "p_price": 10269.51,
+        "f_price": 36416.7,
+        "date": "26/09/2025"
+    },
+    "gaseosa pomelo 2250ml - paso de los toros": {
+        "category": "bebidas",
+        "p_price": 2699.99,
+        "f_price": 1200.0,
+        "date": "26/09/2025"
+    },
+    "jabon liquido 500ml - ala": {
+        "category": "limpieza",
+        "p_price": 4799.99,
+        "f_price": 9599.98,
+        "date": "26/09/2025"
+    },
+    "detergente 1250ml - cif": {
+        "category": "limpieza",
+        "p_price": 4369.99,
+        "f_price": 3495.99,
+        "date": "26/09/2025"
+    },
+    "papel higienico 12u - felpita": {
+        "category": "higiene",
+        "p_price": 3499.99,
+        "f_price": 1750.0,
+        "date": "26/09/2025"
+    },
+    "tomates pelados 400g - la campagnola": {
+        "category": "conservas",
+        "p_price": 1145.99,
+        "f_price": 2864.98,
+        "date": "26/09/2025"
+    },
+    "azucar 500g - independencia": {
+        "category": "azucar",
+        "p_price": 540.0,
+        "f_price": 1080.0,
+        "date": "26/09/2025"
     }
 }
